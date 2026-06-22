@@ -22,6 +22,7 @@ from app.core.constants import ForecastMode
 from app.core.errors import ModelLoadError, MockModeForbiddenError
 from app.core.timeframes import now_utc
 from app.kronos.feature_builder import ModelContext, prepare_context
+from app.kronos.forecast_cache import get_forecast_cache
 from app.kronos.forecast_postprocessor import ForecastDistribution, build_distribution
 from app.kronos.predictor import RealForecaster
 from app.kronos.sampler import generate_mock_paths
@@ -107,8 +108,26 @@ class KronosAdapter:
     # --- convenience: full pipeline ----------------------------------------
     def forecast(self, df: pd.DataFrame, *, symbol: str, timeframe: str) -> ForecastDistribution:
         ctx = self.prepare_context(df, timeframe=timeframe)
+
+        # Exact-result cache: identical (symbol, context_end, config) -> reuse verbatim.
+        # No-op when KAT_FORECAST_CACHE is unset, so default behavior is unchanged.
+        cache = get_forecast_cache()
+        key = None
+        if cache is not None:
+            key = cache.make_key(
+                symbol, timeframe, ctx.context_end, self.config.config_hash(),
+                self.config.sample_count, self.config.context_length, ctx.horizon,
+            )
+            hit = cache.get(key)
+            if hit is not None:
+                self._resolved_mode = hit.mode  # keep walk_forward's forecast_mode correct
+                return hit
+
         sample_paths, mode = self.predict(ctx, symbol)
-        return self.postprocess(sample_paths, ctx, symbol=symbol, timeframe=timeframe, mode=mode)
+        dist = self.postprocess(sample_paths, ctx, symbol=symbol, timeframe=timeframe, mode=mode)
+        if cache is not None and key is not None:
+            cache.put(key, dist)
+        return dist
 
 
 def get_adapter(config: KronosConfig | None = None) -> KronosAdapter:
