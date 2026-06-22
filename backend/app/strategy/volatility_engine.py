@@ -26,6 +26,46 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return true_range(df).rolling(period, min_periods=period).mean()
 
 
+def bollinger_bands(close: pd.Series, period: int = 20, k: float = 2.0) -> pd.DataFrame:
+    """Bollinger Bands: middle SMA(period), upper/lower = middle ± k*std.
+
+    Returns a frame with columns mid, upper, lower, width, pct_b. ``width`` is the
+    band width normalized by the middle (a unitless squeeze gauge); ``pct_b`` is
+    %B = (close - lower) / (upper - lower), where <0 is below the lower band and
+    >1 is above the upper band. Uses a sample std (ddof=0) to match the classic
+    definition. NaN until ``period`` candles are available (no lookahead).
+    """
+    mid = close.rolling(period, min_periods=period).mean()
+    std = close.rolling(period, min_periods=period).std(ddof=0)
+    upper = mid + k * std
+    lower = mid - k * std
+    span = (upper - lower).replace(0, np.nan)
+    return pd.DataFrame({
+        "mid": mid,
+        "upper": upper,
+        "lower": lower,
+        "width": (upper - lower) / mid.replace(0, np.nan),
+        "pct_b": (close - lower) / span,
+    })
+
+
+def bb_squeeze_percentile(close: pd.Series, period: int = 20, k: float = 2.0,
+                          lookback: int = 120) -> float:
+    """Where current BB width sits in its own recent distribution (0..1).
+
+    0 = tightest squeeze in ``lookback``; 1 = widest. Low values flag compression
+    that often precedes a volatility expansion. Returns 1.0 (no squeeze) when there
+    is insufficient history.
+    """
+    bb = bollinger_bands(close, period, k)
+    width = bb["width"].dropna()
+    if len(width) < max(lookback // 2, period):
+        return 1.0
+    recent = width.iloc[-lookback:]
+    cur = float(width.iloc[-1])
+    return float((recent <= cur).mean())
+
+
 def realized_volatility(close: pd.Series, window: int) -> float:
     """Std of per-step pct returns over the last ``window`` candles."""
     rets = close.pct_change().dropna()
