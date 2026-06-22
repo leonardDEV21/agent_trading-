@@ -78,6 +78,25 @@ def _simulate_long_only(
         mtm = equity + ((closes[i + 1] - entry_price) * size if in_pos else 0.0)
         equity_curve.append((idx[i + 1].to_pydatetime(), mtm))
 
+    # Force a final mark-to-close exit if still long at the end, so an always-on
+    # baseline (buy_and_hold) and any baseline ending in-position actually book
+    # their PnL as a trade. Without this, a never-exiting strategy reports 0 trades
+    # and a misleading 0% return.
+    if in_pos:
+        last_close = closes[-1]
+        exit_fee = fee_cost(size * last_close, fee_bps)
+        gross = (last_close - entry_price) * size
+        fees = entry_fee + exit_fee
+        net = gross - fees
+        equity += net
+        trades.append(
+            {
+                "symbol": symbol, "side": "long", "entry_time": entry_time,
+                "exit_time": idx[-1].to_pydatetime(), "gross_pnl": gross,
+                "fees": fees, "slippage": 0.0, "net_pnl": net, "regime": "baseline",
+            }
+        )
+
     return trades, equity_curve
 
 
