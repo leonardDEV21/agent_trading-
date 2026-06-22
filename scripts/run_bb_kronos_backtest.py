@@ -24,7 +24,7 @@ from app.config import get_config_store  # noqa: E402
 from app.db.session import new_session  # noqa: E402
 from app.kronos.adapter import KronosAdapter  # noqa: E402
 from app.repositories import candles_repo  # noqa: E402
-from app.strategy.bb_kronos import PLANS, BBKronosParams  # noqa: E402
+from app.strategy.bb_kronos import PLANS, PRECONDITIONS, BBKronosParams  # noqa: E402
 
 VERDICT = os.environ.get("VERDICT_OUT", "/workspace/spread_validation.json")
 KEEP = ["num_trades", "total_return", "net_pnl", "gross_pnl", "win_rate",
@@ -46,12 +46,17 @@ def gate() -> bool:
     return True
 
 
-def run_strategy(plan, candles_by_symbol, adapter, bt, risk, kronos) -> dict:
+def run_strategy(plan, precond, candles_by_symbol, adapter, bt, risk, kronos) -> dict:
     params = BBKronosParams()
     warmup = max(bt.warmup_candles, kronos.context_length)
     all_trades: list[dict] = []
     for sym, df in candles_by_symbol.items():
         def plan_fn(hist, _sym=sym):
+            # Skip the (expensive) Kronos forecast on bars where the BB geometry
+            # can't produce a trade — result-identical, since plan() would return
+            # None there regardless of the forecast.
+            if not precond(hist, params):
+                return None
             try:
                 fc = adapter.forecast(hist, symbol=_sym, timeframe=bt.timeframe)
             except Exception:
@@ -114,7 +119,7 @@ def main() -> None:
           f"sharpe={bh.get('sharpe')} pf={bh.get('profit_factor')}\n")
 
     for name, plan in PLANS.items():
-        m = run_strategy(plan, candles_by_symbol, adapter, bt, risk, kronos)
+        m = run_strategy(plan, PRECONDITIONS[name], candles_by_symbol, adapter, bt, risk, kronos)
         print(f"=== {name} ===")
         print(json.dumps({k: m[k] for k in KEEP if k in m}, indent=2, default=str))
         beats = (m.get("sharpe", -9) > bh.get("sharpe", 0)

@@ -42,6 +42,42 @@ def _ready(df: pd.DataFrame, params: BBKronosParams) -> bool:
     return len(df) >= max(params.bb_period, params.atr_period, params.squeeze_lookback) + 2
 
 
+# --- cheap, forecast-free preconditions -----------------------------------------
+# Each plan ONLY uses the Kronos forecast AFTER its Bollinger geometry condition is
+# met; if the geometry is absent the plan returns None regardless of the forecast.
+# These predicates replicate exactly those no-forecast gates so a caller can skip the
+# (expensive) Kronos forecast on bars that can never produce a trade — a result-
+# identical optimization, NOT a behaviour change. test_bb_kronos asserts the
+# invariant: precondition False => plan(any_forecast, df) is None.
+
+def squeeze_breakout_precondition(df: pd.DataFrame, params: BBKronosParams | None = None) -> bool:
+    params = params or BBKronosParams()
+    if not _ready(df, params):
+        return False
+    close = df["close"]
+    bb = ind.bollinger_bands(close, params.bb_period, params.bb_k)
+    upper, lower = float(bb["upper"].iloc[-2]), float(bb["lower"].iloc[-2])
+    if pd.isna(upper) or pd.isna(lower):
+        return False
+    squeeze_pct = ind.bb_squeeze_percentile(close.iloc[:-1], params.bb_period, params.bb_k,
+                                            params.squeeze_lookback)
+    if squeeze_pct > params.squeeze_threshold:
+        return False
+    cur = float(close.iloc[-1])
+    return cur > upper or cur < lower
+
+
+def mean_reversion_fade_precondition(df: pd.DataFrame, params: BBKronosParams | None = None) -> bool:
+    params = params or BBKronosParams()
+    if not _ready(df, params):
+        return False
+    bb = ind.bollinger_bands(df["close"], params.bb_period, params.bb_k)
+    pct_b = float(bb["pct_b"].iloc[-1])
+    if pd.isna(pct_b):
+        return False
+    return pct_b < 0.0 or pct_b > 1.0
+
+
 def squeeze_breakout_plan(
     forecast: ForecastDistribution, df: pd.DataFrame, params: BBKronosParams | None = None
 ) -> TradePlan | None:
@@ -134,3 +170,9 @@ def mean_reversion_fade_plan(
 
 
 PLANS = {"squeeze_breakout": squeeze_breakout_plan, "mean_reversion_fade": mean_reversion_fade_plan}
+
+# Forecast-free gate per plan: only call Kronos when the cheap BB geometry is present.
+PRECONDITIONS = {
+    "squeeze_breakout": squeeze_breakout_precondition,
+    "mean_reversion_fade": mean_reversion_fade_precondition,
+}

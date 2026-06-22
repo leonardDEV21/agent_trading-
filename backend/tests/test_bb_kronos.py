@@ -77,3 +77,28 @@ def test_mean_reversion_vetoed_when_kronos_predicts_continued_drop():
     df = _df(closes)
     fc = _fc(last_close=90.0, q10=-0.05, q90=0.0, median=-0.03)  # Kronos: keeps falling → veto
     assert bk.mean_reversion_fade_plan(fc, df) is None
+
+
+def test_precondition_false_implies_plan_none_for_any_forecast():
+    """The speed optimization's safety contract: if the cheap precondition is False,
+    the plan returns None regardless of the forecast — so skipping the Kronos call on
+    those bars is result-identical. Checked over many random windows + extreme forecasts."""
+    rng = np.random.default_rng(11)
+    extremes = [
+        _fc(100.0, -0.5, 0.5, 0.4), _fc(100.0, -0.001, 0.001, 0.0),
+        _fc(100.0, 0.0, 0.9, 0.5), _fc(100.0, -0.9, 0.0, -0.5), _fc(100.0, 0.1, 0.1, 0.1),
+    ]
+    cases = [
+        ("squeeze_breakout", bk.squeeze_breakout_precondition, bk.squeeze_breakout_plan),
+        ("mean_reversion_fade", bk.mean_reversion_fade_precondition, bk.mean_reversion_fade_plan),
+    ]
+    checked = 0
+    for seed in range(60):
+        closes = list(100 + np.cumsum(rng.normal(0, 0.4, 260)))
+        df = _df(closes)
+        for _name, precond, plan in cases:
+            if not precond(df):
+                for fc in extremes:
+                    assert plan(fc, df) is None  # no forecast could create a trade here
+                checked += 1
+    assert checked > 0  # the False branch was actually exercised
