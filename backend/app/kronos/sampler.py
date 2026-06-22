@@ -47,7 +47,54 @@ def generate_mock_paths(symbol: str, ctx: ModelContext, config: KronosConfig) ->
 def generate_real_paths(
     handles: KronosHandles, ctx: ModelContext, config: KronosConfig
 ) -> np.ndarray:
-    """Collect sample_count independent close-price paths from the real model."""
+    """Collect sample_count independent close-price paths from the real model.
+
+    Uses ``predict_batch`` to stack the identical context ``sample_count`` times
+    into ONE batched forward pass (upstream's autoregressive decode samples
+    stochastically per batch row regardless of the row's input being a
+    duplicate, so each row is still an independent draw) instead of looping
+    ``predict()`` sample_count times sequentially. Same model, same sampling
+    distribution — statistically identical output, not bit-identical per path
+    (draw order differs), which is fine: nothing depends on a specific path's
+    identity, only on the resulting distribution (quantiles/IC). Falls back to
+    the sequential loop if batching fails (e.g. batch OOM on a small GPU).
+    """
+    cols = ["open", "high", "low", "close", "volume", "amount"]
+    df = ctx.df[cols]
+    n = config.sample_count
+
+    try:
+        pred_dfs = handles.predictor.predict_batch(
+            df_list=[df] * n,
+            x_timestamp_list=[ctx.x_timestamp] * n,
+            y_timestamp_list=[ctx.y_timestamp] * n,
+            pred_len=ctx.horizon,
+            T=config.temperature,
+            top_k=config.top_k,
+            top_p=config.top_p,
+            sample_count=1,
+            verbose=False,
+        )
+    except Exception as exc:  # pragma: no cover - depends on real model / GPU memory
+        log.warning("kronos_batch_predict_failed_falling_back_to_loop", error=str(exc))
+        return _generate_real_paths_sequential(handles, ctx, config)
+
+    paths: list[np.ndarray] = []
+    for i, pred_df in enumerate(pred_dfs):
+        close = np.asarray(pred_df["close"].to_numpy(), dtype=float)
+        if close.shape[0] != ctx.horizon:
+            raise ModelLoadError(
+                f"Kronos returned {close.shape[0]} steps, expected {ctx.horizon} (sample {i})"
+            )
+        paths.append(close)
+
+    return np.vstack(paths)
+
+
+def _generate_real_paths_sequential(
+    handles: KronosHandles, ctx: ModelContext, config: KronosConfig
+) -> np.ndarray:
+    """One predict() call per sample. Slower fallback; identical sampling logic."""
     cols = ["open", "high", "low", "close", "volume", "amount"]
     df = ctx.df[cols]
 

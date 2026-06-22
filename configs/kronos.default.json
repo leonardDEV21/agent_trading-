@@ -1,8 +1,8 @@
 {
   "config_version": "1.0.0",
-  "model_name": "NeoQuasar/Kronos-small",
+  "model_name": "NeoQuasar/Kronos-base",
   "tokenizer_name": "NeoQuasar/Kronos-Tokenizer-base",
-  "model_variant": "small",
+  "model_variant": "base",
   "context_length": 360,
   "max_context": 512,
   "forecast_horizon": 24,
