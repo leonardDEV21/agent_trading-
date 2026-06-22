@@ -1,0 +1,16 @@
+# OPTIONAL heavy dependencies for running the REAL Kronos forecast model.
+# Install only when you intend to run real (non-mock) forecasts:
+#     pip install -r requirements-kronos.txt
+#
+# Then clone the upstream Kronos repo into the vendor path (see MCP.md / README.md):
+#     git clone https://github.com/shiyu-coder/Kronos vendor/Kronos
+#     pip install -r vendor/Kronos/requirements.txt
+#
+# torch is large. On CPU-only machines install the CPU wheel:
+#     pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+torch>=2.1
+transformers>=4.40
+huggingface_hub>=0.23
+einops>=0.7
+safetensors>=0.4

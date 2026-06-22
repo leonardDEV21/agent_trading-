@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0b0e14;
+  color: #e5e7eb;
+}
+
+.panel {
+  @apply bg-base-panel border border-base-border rounded-lg p-4;
+}
+
+.btn {
+  @apply px-3 py-1.5 rounded-md bg-accent text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition;
+}
+
+.btn-ghost {
+  @apply px-3 py-1.5 rounded-md border border-base-border text-sm hover:bg-base-border/40 transition;
+}
+
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+}
+
+table {
+  @apply w-full text-sm;
+}
+th {
+  @apply text-left text-xs uppercase tracking-wide text-gray-400 font-medium py-2 px-2;
+}
+td {
+  @apply py-2 px-2 border-t border-base-border;
+}

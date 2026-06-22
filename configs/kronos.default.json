@@ -1,0 +1,44 @@
+{
+  "config_version": "1.0.0",
+  "model_name": "NeoQuasar/Kronos-small",
+  "tokenizer_name": "NeoQuasar/Kronos-Tokenizer-base",
+  "model_variant": "small",
+  "context_length": 360,
+  "max_context": 512,
+  "forecast_horizon": 24,
+  "sample_count": 30,
+  "temperature": 1.0,
+  "top_k": 0,
+  "top_p": 0.9,
+  "clip": 5,
+  "mock_mode": "false",
+  "device": "auto",
+  "model_cache_dir": "models/kronos_cache",
+  "vendor_path": "vendor/Kronos",
+  "variants": {
+    "mini": {
+      "model_name": "NeoQuasar/Kronos-mini",
+      "tokenizer_name": "NeoQuasar/Kronos-Tokenizer-2k",
+      "max_context": 2048,
+      "params": "4.1M"
+    },
+    "small": {
+      "model_name": "NeoQuasar/Kronos-small",
+      "tokenizer_name": "NeoQuasar/Kronos-Tokenizer-base",
+      "max_context": 512,
+      "params": "24.7M"
+    },
+    "base": {
+      "model_name": "NeoQuasar/Kronos-base",
+      "tokenizer_name": "NeoQuasar/Kronos-Tokenizer-base",
+      "max_context": 512,
+      "params": "102.3M"
+    }
+  },
+  "notes": {
+    "mock_mode": "auto = use real Kronos if it loads, else fall back to clearly-labeled mock. true = force mock. false = require real model (raise if it cannot load).",
+    "device": "auto = detect cuda/mps/cpu. Override with 'cuda:0', 'mps', or 'cpu'.",
+    "sample_count": "Number of INDEPENDENT forecast paths collected to build the distribution. The adapter loops upstream predict(sample_count=1) because upstream predict averages samples internally.",
+    "context_length": "Number of trailing candles fed to the model. Must be <= max_context for the chosen variant."
+  }
+}

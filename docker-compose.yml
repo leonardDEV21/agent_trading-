@@ -1,0 +1,61 @@
+# Kronos Alpha Terminal — local stack.
+#   docker compose up --build
+# Brings up Postgres, the FastAPI backend (mock-capable, no model download needed)
+# and the Next.js dashboard. Configs/data/models are mounted as volumes so you can
+# edit configs and keep data across rebuilds.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kronos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kronos}
+      POSTGRES_DB: ${POSTGRES_DB:-kronos_terminal}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kronos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KAT_DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-kronos}:${POSTGRES_PASSWORD:-kronos}@db:5432/${POSTGRES_DB:-kronos_terminal}
+      KAT_CONFIG_DIR: /app/configs
+      KAT_DATA_DIR: /app/data
+      KAT_MODELS_DIR: /app/models
+      KAT_ENABLE_LIVE_TRADING: "false"
+      KAT_ENABLE_SCHEDULER: ${KAT_ENABLE_SCHEDULER:-true}
+      KAT_MOCK_MODE: ${KAT_MOCK_MODE:-auto}
+      KAT_CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./configs:/app/configs
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./vendor:/app/vendor
+      - ./scripts:/app/scripts
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

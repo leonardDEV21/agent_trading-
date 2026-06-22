@@ -1,0 +1,31 @@
+{
+  "config_version": "1.0.0",
+  "edge_formula_version": "v1",
+  "minimum_p_up": 0.55,
+  "minimum_p_down": 0.55,
+  "minimum_cost_adjusted_edge": 0.002,
+  "minimum_asymmetry": 1.1,
+  "maximum_volatility_ratio": 2.0,
+  "minimum_path_quality": 0.4,
+  "minimum_edge_score": 0.02,
+  "require_regime_alignment": true,
+  "require_market_structure_confirmation": true,
+  "late_entry_atr_multiple": 1.5,
+  "edge_weights": {
+    "volatility_penalty_scale": 0.5,
+    "volatility_penalty_threshold": 1.25,
+    "tiny_number": 1e-08
+  },
+  "confidence_bands": {
+    "high": 0.66,
+    "medium": 0.58,
+    "low": 0.5
+  },
+  "notes": {
+    "minimum_p_up": "Minimum forecast probability of upward move to consider a long candidate.",
+    "minimum_cost_adjusted_edge": "Median forecast return must exceed fees+slippage by at least this fraction.",
+    "minimum_asymmetry": "Required ratio of upside (q90) to downside (q10) for longs (inverse for shorts).",
+    "maximum_volatility_ratio": "Reject if forecast volatility is more than this multiple of recent realized volatility.",
+    "late_entry_atr_multiple": "If current price is more than this many ATRs from the ideal entry zone, mark blocked_by_late_entry."
+  }
+}

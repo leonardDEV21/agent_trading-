@@ -1,0 +1,30 @@
+{
+  "config_version": "1.0.0",
+  "account_size": 10000.0,
+  "account_currency": "USD",
+  "risk_per_trade": 0.005,
+  "max_daily_loss": 0.015,
+  "max_open_positions": 2,
+  "max_correlated_positions": 1,
+  "allow_leverage": false,
+  "max_leverage": 1,
+  "fee_bps": 10.0,
+  "slippage_bps": 5.0,
+  "min_stop_distance_pct": 0.003,
+  "min_reward_risk_ratio": 1.0,
+  "require_take_profit": true,
+  "kill_switch": {
+    "max_consecutive_losses_per_day": 2,
+    "on_data_provider_error": true,
+    "max_model_uncertainty": 0.85,
+    "max_spread_bps": 25.0,
+    "cooldown_minutes": 720
+  },
+  "notes": {
+    "risk_per_trade": "Fraction of account risked between entry and stop. 0.005 = 0.5%.",
+    "max_daily_loss": "Daily realized loss limit as a fraction of account. Trips kill switch.",
+    "max_correlated_positions": "Max simultaneous positions within one beta_group (e.g. btc_beta).",
+    "fee_bps": "Round-trip fee assumption in basis points per side (taker). 10 bps = 0.10%.",
+    "max_model_uncertainty": "If forecast_volatility_ratio (or normalized uncertainty proxy) exceeds this, block + trip kill switch."
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "asset_class": "stocks",
+  "default_exchange": "yfinance",
+  "quote_currency": "USD",
+  "assets": [
+    {
+      "symbol": "SPY",
+      "exchange": "yfinance",
+      "asset_type": "stock",
+      "display_name": "SPDR S&P 500 ETF",
+      "is_market_benchmark": true,
+      "beta_group": "us_equity",
+      "min_notional_usd": 1,
+      "enabled": false
+    },
+    {
+      "symbol": "QQQ",
+      "exchange": "yfinance",
+      "asset_type": "stock",
+      "display_name": "Invesco QQQ (Nasdaq 100)",
+      "is_market_benchmark": false,
+      "beta_group": "us_equity",
+      "min_notional_usd": 1,
+      "enabled": false
+    },
+    {
+      "symbol": "NVDA",
+      "exchange": "yfinance",
+      "asset_type": "stock",
+      "display_name": "NVIDIA",
+      "is_market_benchmark": false,
+      "beta_group": "us_equity_semis",
+      "min_notional_usd": 1,
+      "enabled": false
+    }
+  ],
+  "notes": "Stocks are disabled by default. yfinance is optional and rate limited. Enable per-asset only after confirming data quality. Intraday history from yfinance is limited (~730 days for 1h)."
+}

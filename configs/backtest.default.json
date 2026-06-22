@@ -1,0 +1,29 @@
+{
+  "config_version": "1.0.0",
+  "mode": "walk_forward",
+  "symbols": ["BTC/USDT", "ETH/USDT", "SOL/USDT"],
+  "timeframe": "1h",
+  "train_window_candles": 720,
+  "test_window_candles": 168,
+  "step_candles": 168,
+  "forecast_horizon": 24,
+  "max_hold_candles": 24,
+  "decision_frequency_candles": 1,
+  "warmup_candles": 360,
+  "fee_bps": 10.0,
+  "slippage_bps": 5.0,
+  "slippage_model": "atr_proportional",
+  "initial_equity": 10000.0,
+  "use_cached_forecasts": true,
+  "baselines": ["buy_and_hold", "ema_trend", "atr_breakout", "random_entry"],
+  "random_seed": 42,
+  "notes": {
+    "train_window_candles": "Walk-forward training/context window length per fold.",
+    "test_window_candles": "Out-of-sample window length per fold.",
+    "step_candles": "How far the window advances each fold (non-overlapping if == test_window).",
+    "warmup_candles": "Candles required before the first decision so indicators + Kronos context are valid.",
+    "decision_frequency_candles": "Evaluate signals every N candles inside the test window.",
+    "slippage_model": "fixed_bps | atr_proportional",
+    "use_cached_forecasts": "Reuse forecasts already stored for the exact (symbol, tf, context_end, config_hash). Never reuse a forecast whose context extends past decision time."
+  }
+}

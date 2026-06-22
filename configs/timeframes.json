@@ -1,0 +1,35 @@
+{
+  "default": "1h",
+  "enabled": ["1h"],
+  "available": {
+    "1h": {
+      "ccxt_code": "1h",
+      "yfinance_code": "1h",
+      "seconds": 3600,
+      "annualization_periods": 8760,
+      "description": "1 hour candles. Primary timeframe for v1."
+    },
+    "4h": {
+      "ccxt_code": "4h",
+      "yfinance_code": null,
+      "seconds": 14400,
+      "annualization_periods": 2190,
+      "description": "4 hour candles. Used by regime filter (higher timeframe context)."
+    },
+    "1d": {
+      "ccxt_code": "1d",
+      "yfinance_code": "1d",
+      "seconds": 86400,
+      "annualization_periods": 365,
+      "description": "Daily candles."
+    },
+    "15m": {
+      "ccxt_code": "15m",
+      "yfinance_code": "15m",
+      "seconds": 900,
+      "annualization_periods": 35040,
+      "description": "15 minute candles. Disabled in v1."
+    }
+  },
+  "regime_higher_timeframe": "4h"
+}

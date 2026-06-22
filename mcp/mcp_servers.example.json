@@ -1,0 +1,43 @@
+{
+  "_comment": "Template MCP server config. Copy to mcp_servers.json and fill in. Use env vars for tokens; NEVER commit real credentials.",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${PROJECT_ROOT}"],
+      "description": "Read/edit repository files within PROJECT_ROOT only."
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" },
+      "description": "PRs, issues, code review. Scope the token to this repo."
+    },
+    "browser_search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": { "BRAVE_API_KEY": "${BRAVE_API_KEY}" },
+      "description": "Web search to verify upstream APIs/docs (e.g. the current Kronos API)."
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${KAT_DATABASE_URL}"],
+      "description": "Read-mostly access to candles/forecasts/signals. Use a dev DB."
+    },
+    "python": {
+      "command": "uvx",
+      "args": ["mcp-server-python"],
+      "env": { "PYTHONPATH": "${PROJECT_ROOT}/backend" },
+      "description": "Run scripts/tests in a sandbox (e.g. pytest, run_backtest.py)."
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-docker"],
+      "description": "Build/start/stop the local stack."
+    },
+    "terminal": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-shell"],
+      "description": "Optional shell access. Highest risk — restrict to the project dir."
+    }
+  }
+}

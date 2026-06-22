@@ -1,0 +1,38 @@
+{
+  "asset_class": "crypto",
+  "default_exchange": "binance",
+  "quote_currency": "USDT",
+  "assets": [
+    {
+      "symbol": "BTC/USDT",
+      "exchange": "binance",
+      "asset_type": "crypto",
+      "display_name": "Bitcoin",
+      "is_market_benchmark": true,
+      "beta_group": "btc_beta",
+      "min_notional_usd": 10,
+      "enabled": true
+    },
+    {
+      "symbol": "ETH/USDT",
+      "exchange": "binance",
+      "asset_type": "crypto",
+      "display_name": "Ethereum",
+      "is_market_benchmark": false,
+      "beta_group": "btc_beta",
+      "min_notional_usd": 10,
+      "enabled": true
+    },
+    {
+      "symbol": "SOL/USDT",
+      "exchange": "binance",
+      "asset_type": "crypto",
+      "display_name": "Solana",
+      "is_market_benchmark": false,
+      "beta_group": "btc_beta",
+      "min_notional_usd": 10,
+      "enabled": true
+    }
+  ],
+  "notes": "btc_beta assets are highly correlated to BTC. The risk engine treats them as correlated for max_correlated_positions."
+}
