@@ -105,9 +105,15 @@ def main() -> None:
         return
     store = get_config_store()
     bt, risk, kronos = store.backtest(), store.risk(), store.kronos()
+    # Optional SYMBOLS override (comma-separated) for a quick smaller-sample test run.
+    symbols = bt.symbols
+    env_syms = os.environ.get("SYMBOLS")
+    if env_syms:
+        symbols = [s.strip() for s in env_syms.split(",") if s.strip()]
+        print(f"SYMBOLS override -> {symbols}\n")
     db = new_session()
     candles_by_symbol = {}
-    for sym in bt.symbols:
+    for sym in symbols:
         rows = candles_repo.get_candles(db, sym, bt.timeframe, ascending=True, limit=20000)
         if len(rows) >= bt.warmup_candles + bt.test_window_candles:
             candles_by_symbol[sym] = candles_repo.candles_to_df(rows)
